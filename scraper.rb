@@ -6,16 +6,20 @@ require 'csv'
 require 'scraperwiki'
 require 'pry'
 
-# require 'open-uri/cached'
-# OpenURI::Cache.cache_path = '.cache'
+def gender_for(str)
+  return if str.to_s.empty?
+  return 'male' if str.downcase == 'm'
+  return 'female' if str.downcase == 'f'
+  warn "Unknown gender: #{str}"
+end
 
 def reprocess_csv(file)
   raw = open(file).read
   csv = CSV.parse(raw, headers: true, header_converters: :symbol)
   csv.each do |row|
     data = row.to_hash.each { |k, v| v = v.to_s.gsub(/[[:space:]]+/, ' ').strip }
+    data[:gender] = gender_for(data[:gender])
     data[:term] = '2012'
-    data[:source] = 'http://www.telema.org/pdf/telema_deputes_rdc.pdf'
     ScraperWiki.save_sqlite([:id, :name, :term], data)
   end
 end
